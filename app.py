@@ -1,21 +1,32 @@
-from dash import Dash
-from domain import ExampleData, CsvSchema
-from layout import LayoutFactory
-from io_upload import UploadParser
+import pandas as pd
+import plotly.express as px
+from dash import Dash, html, dcc
+
 from callbacks import register_callbacks
+from data import ExampleData, CsvSchema, ExampleTesters
+from layout import Layout
+from upload_parser import UploadParser
 
-EXTERNAL_STYLES = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
-def create_app() -> Dash:
-    app = Dash(__name__, external_stylesheets=EXTERNAL_STYLES)
+# -> Dash is the return of the method
+def create_app(
+        title: str = "QAlculator"
+) -> Dash:
+    app = Dash(__name__)
 
-    example_df = ExampleData.dataframe()
-    app.title = "QAlculator"
-    app.layout = LayoutFactory("QAlculator", example_df).build()
+    data_frame = ExampleData.data_frame()
+    tester_data_frame = ExampleTesters.tester_data_frame()
+
+    app.title = title
+
+    app.layout = Layout(title, data_frame, tester_data_frame).build()
 
     parser = UploadParser(CsvSchema())
-    register_callbacks(app, example_df, parser)
+    register_callbacks(app, data_frame, tester_data_frame, parser)
+
     return app
+
+
 
 if __name__ == "__main__":
     create_app().run(debug=True)

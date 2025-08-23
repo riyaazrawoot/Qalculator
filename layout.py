@@ -1,74 +1,66 @@
-from dash import html, dcc
 import pandas as pd
+from dash import html, dcc
 
-class LayoutFactory:
-    def __init__(self, title: str, example_df: pd.DataFrame):
+
+class Layout:
+    def __init__(self, title: str, example_data_frame: pd.DataFrame, example_tester_data: pd.DataFrame):
         self.title = title
-        self.example_df = example_df
+        self.example_data_frame = example_data_frame
+
 
     def build(self):
-        return html.Div(
-            [
-                html.H1(self.title),
-                html.Blockquote(
-                    "Download the example CSV, populate it, then upload to work out the ROI"
-                ),
-                html.Div(
-                    [
-                        html.Button("Download Example CSV", id="btn_csv"),
-                        dcc.Download(id="download-dataframe-csv"),
-                    ],
-                    style={"marginBottom": "12px"},
-                ),
+        return html.Div([
+            html.H1(self.title),
+            html.H5(["Find the example.csv below.",
+                     html.Br(),
+                     "If you don’t download and upload your own file, the app will use the built-in sample data instead.",
+                     html.Br(),
+                     "This lets you explore the calculations and graphs right away, but with example numbers rather than your own."]),
 
-                # ROI assumption inputs
-                html.Div([
-                    html.Div([
-                        html.Label("Tester monthly salary (ZAR)"),
-                        dcc.Input(id="inp_salary_month", type="number", value=20000, step=500, style={"width":"100%"})
-                    ], className="three columns"),
-                    html.Div([
-                        html.Label("Tester hours per month"),
-                        dcc.Input(id="inp_hours_month", type="number", value=160, step=1, style={"width":"100%"})
-                    ], className="three columns"),
-                    html.Div([
-                        html.Label("Releases per year"),
-                        dcc.Input(id="inp_releases_year", type="number", value=12, step=1, style={"width":"100%"})
-                    ], className="three columns"),
-                    html.Div([
-                        html.Label("Releases to plot"),
-                        dcc.Input(id="inp_releases_to_plot", type="number", value=12, step=1, style={"width":"100%"})
-                    ], className="three columns"),
-                ], className="row", style={"margin":"10px 0"}),
+            html.Div(
+                [
+                    html.Button("Download Example CSV", id="btn_csv"),
+                    dcc.Download(id="download-dataframe-csv"),
+                ],
+                id="btn_div"
+            ),
 
-                html.Div([
-                    html.Div([
-                        html.Label("Global runs per release (fallback)"),
-                        dcc.Input(id="inp_runs_per_release_global", type="number", value=1, step=1, style={"width":"100%"})
-                    ], className="three columns"),
-                ], className="row", style={"margin":"10px 0"}),
+            html.Div(
+                [
+                    html.Button("Download Example Tester Details CSV", id="btn_tester_csv"),
+                    dcc.Download(id="download-tester-dataframe-csv"),
+                ],
+                id="btn_tester_div"
+            ),
 
-                dcc.Upload(
-                    id="upload-data",
-                    children=html.Div(["Drag and Drop or ", html.A("Select Files")]),
-                    style={
-                        "width":"100%","height":"60px","lineHeight":"60px","borderWidth":"1px",
-                        "borderStyle":"dashed","borderRadius":"5px","textAlign":"center","margin":"10px"
-                    },
-                    multiple=False,
-                ),
+            html.H5(["Upload your own data below."]),
 
-                # Store active data (uploaded or example)
-                dcc.Store(id="active-df-store"),
+            dcc.Upload(
+                id="upload-data",
+                children=html.Button(html.A("Select Files")),
+                multiple=False,
+            ),
 
-                # Upload preview
-                html.Div(id="output-data-upload"),
+            # Store active data (uploaded or example)
+            dcc.Store(id="active-df-store"),
 
-                html.Hr(),
+            # Upload preview
+            html.Div(id="output-data-upload"),
 
-                html.H3("Cumulative Cost Over Releases (Manual vs Automation)"),
-                dcc.Graph(id="roi-graph"),
+            # Check list only shown once generate button is clicked
+            html.Div([
+                dcc.Checklist(id="graph-checklist", options=[], value=[], style={"display": "none"}),
 
-                html.Div(id="roi-metrics", style={"marginTop": "8px", "fontWeight": "bold"}),
-            ]
-        )
+                html.Button("Generate Graphs", id="btn-generate", n_clicks=0),
+                html.Div(id="graph-options"),
+                html.Div(id="tabs-container"),
+                html.Div(id="tab-content")
+            ], style={
+
+                "padding": "30px"
+
+            }),
+
+        ], "app")
+
+
