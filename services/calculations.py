@@ -1,3 +1,5 @@
+import pandas as pd
+
 from data import ExampleTesters
 
 
@@ -16,3 +18,22 @@ def average_hourly_rate(testers_df):
 
 rates = average_hourly_rate(ExampleTesters.tester_data_frame())
 print(rates)
+
+def execution_time_savings(data_frame: pd.DataFrame, runs_per_release = 1, releases = 12):
+    df = data_frame.copy()
+
+    manual_total_hours = (df["manual_time_min"].fillna(0).sum() / 60) \
+    * runs_per_release * releases
+
+    automation_total_hours = (df["exec_time_sec"].fillna(0).sum() / 3600) \
+    * runs_per_release * releases
+
+    savings_hours = manual_total_hours - automation_total_hours
+    savings_percentage = (savings_hours / manual_total_hours * 100) if manual_total_hours > 0 else 0
+
+    return {
+        "manual_hours": manual_total_hours,
+        "automation_hours": automation_total_hours,
+        "savings_hours": savings_hours,
+        "savings_percentage": round(savings_percentage, 2),
+    }

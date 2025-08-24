@@ -12,7 +12,7 @@ from upload_parser import UploadParser
 def create_app(
         title: str = "QAlculator"
 ) -> Dash:
-    app = Dash(__name__)
+    app = Dash(__name__, suppress_callback_exceptions=True)
 
     data_frame = ExampleData.data_frame()
     tester_data_frame = ExampleTesters.tester_data_frame()

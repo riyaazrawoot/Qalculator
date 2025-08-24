@@ -1,7 +1,7 @@
 from dash import dcc, Input, Output, dash_table, html, State
 import pandas as pd
 
-from services.graph_registry import manual_automation_comparison
+from services.graph_registry import manual_automation_comparison, execution_savings_time_graph
 from upload_parser import UploadParser
 
 
@@ -48,7 +48,7 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
     @app.callback(
         Output("graph-options","children"),
         Input("btn-generate", "n_clicks"),
-        prevent_intitial_call=True,
+        prevent_initial_call=True,
     )
     def show_checklist(n_clicks):
         if not n_clicks:
@@ -89,7 +89,7 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
         Output("tab-content", "children"),
         Input("graph-tabs", "value"),
         State("active-df-store", "data"),
-        prevent_intitial_call=True
+        prevent_initial_call=True
     )
     def render_graph(tab_value, records):
 
@@ -97,6 +97,9 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
 
         if tab_value in ("Manual vs Automation Testcases", "Cost", "COST"):
             figure = manual_automation_comparison(data_frame)
+            return dcc.Graph(figure=figure)
+        elif tab_value == "Time":
+            figure = execution_savings_time_graph(data_frame, runs_per_release=1, releases=12)
             return dcc.Graph(figure=figure)
 
         return html.H3(f"You clicked the {tab_value} tab")
