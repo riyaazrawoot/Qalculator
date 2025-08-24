@@ -22,7 +22,9 @@ def create_app(
     app.layout = Layout(title, data_frame, tester_data_frame).build()
 
     parser = UploadParser(CsvSchema())
-    register_callbacks(app, data_frame, tester_data_frame, parser)
+    test_parser = UploadParser(CsvSchema.tester_columns)
+
+    register_callbacks(app, data_frame, tester_data_frame, parser, test_parser)
 
     return app
 

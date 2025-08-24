@@ -6,7 +6,7 @@ from services.graph_registry import manual_automation_comparison, execution_savi
 from upload_parser import UploadParser
 
 
-def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.DataFrame, parser: UploadParser):
+def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.DataFrame, parser: UploadParser, tester_parser: UploadParser):
 
     # 1) Download example.csv
     @app.callback(
@@ -136,7 +136,7 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
             return [html.H5("Using example data"), table], tester_data_frame.to_dict("records")
 
         try:
-            preview, df = parser.parse_contents(contents, filename, last_modified)
+            preview, df = tester_parser.parse_contents(contents, filename, last_modified)
             return [preview], df.to_dict("records")
         except Exception as e:
             err = html.Div(f"Error processing file: {e}", style={"color": "crimson"})
