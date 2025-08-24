@@ -41,11 +41,19 @@ class Layout:
                 multiple=False,
             ),
 
+            dcc.Upload(
+                id="upload-tester-data",
+                children=html.Button(html.A("Select Files")),
+                multiple=False,
+            ),
+
             # Store active data (uploaded or example)
             dcc.Store(id="active-df-store"),
+            dcc.Store(id="active-tester-df-store"),
 
             # Upload preview
             html.Div(id="output-data-upload"),
+            html.Div(id="output-testdata-upload"),
 
             # Check list only shown once generate button is clicked
             html.Div([
