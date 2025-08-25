@@ -4,6 +4,21 @@ import pandas as pd
 
 from data import ExampleTesters
 
+def manual_automation_comparison(data_frame: pd.DataFrame):
+    df = data_frame.copy()
+    column_name = "candidate_for_automation"
+    col = df[column_name].astype(str).str.strip().str.lower()
+
+    counts = pd.DataFrame({
+        "Category": ["Automation Candidates", "Manual Only"],
+        "Count": [
+            (col.isin(["yes", "auto"])).sum(),
+            (col == "no").sum()
+        ]
+    })
+
+
+    return counts
 
 def average_hourly_rate(testers_df):
     def avg_rate(role):

@@ -1,21 +1,12 @@
 import pandas as pd
 import plotly
 
-from services.calculations import execution_time_savings
+from services.calculations import execution_time_savings, manual_automation_comparison
 
 
-def manual_automation_comparison(data_frame: pd.DataFrame):
-    df = data_frame.copy()
-    column_name = "candidate_for_automation"
-    col = df[column_name].astype(str).str.strip().str.lower()
+def manual_automation_comparison_graph(data_frame: pd.DataFrame):
 
-    counts = pd.DataFrame({
-        "Category": ["Automation Candidates", "Manual Only"],
-        "Count": [
-            (col.isin(["yes", "auto"])).sum(),
-            (col == "no").sum()
-        ]
-    })
+    counts = manual_automation_comparison(data_frame)
 
     # Bar chart
     figure = plotly.express.bar(

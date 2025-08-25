@@ -1,11 +1,12 @@
 from dash import dcc, Input, Output, dash_table, html, State
 import pandas as pd
 
-from services.graph_registry import manual_automation_comparison, execution_savings_time_graph
+from services.graph_registry import manual_automation_comparison, execution_savings_time_graph, \
+    manual_automation_comparison_graph
 from upload_parser import UploadParser
 
 
-def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.DataFrame, parser: UploadParser):
+def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.DataFrame, parser: UploadParser, tester_parser: UploadParser):
 
     # 1) Download example.csv
     @app.callback(
@@ -96,7 +97,7 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
         data_frame = pd.DataFrame(records) if records else example_df
 
         if tab_value in ("Manual vs Automation Testcases", "Cost", "COST"):
-            figure = manual_automation_comparison(data_frame)
+            figure = manual_automation_comparison_graph(data_frame)
             return dcc.Graph(figure=figure)
         elif tab_value == "Time":
             figure = execution_savings_time_graph(data_frame, runs_per_release=1, releases=12)
@@ -115,3 +116,28 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
         # Called after the first click
         return dcc.send_data_frame(tester_example_df.to_csv, "qa_tester_example.csv", index=False)
 
+    # 7) Preview table + store testdata data (uploaded or example)
+    @app.callback(
+        Output("output-testdata-upload", "children"),
+        Output("active-tester-df-store", "data"),
+        Input("upload-tester-data", "contents"),
+        State("upload-tester-data", "filename"),
+        State("upload-tester-data", "last_modified"),
+        prevent_initial_call=False,
+    )
+    def on__tester_details_upload(contents: str, filename: str, last_modified: int):
+        if contents is None:
+            tester_data_frame = tester_example_df.copy()
+            table = dash_table.DataTable(
+                data=tester_data_frame.to_dict("records"),
+                columns=[{"name": i, "id": i} for i in tester_data_frame.columns],
+                page_size=6,
+            )
+            return [html.H5("Using example data"), table], tester_data_frame.to_dict("records")
+
+        try:
+            preview, df = tester_parser.parse_contents(contents, filename, last_modified)
+            return [preview], df.to_dict("records")
+        except Exception as e:
+            err = html.Div(f"Error processing file: {e}", style={"color": "crimson"})
+            return [err], tester_example_df.to_dict("records")

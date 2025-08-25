@@ -1,11 +1,12 @@
 import base64, io, datetime as dt
+from typing import Tuple
 import pandas as pd
 from dash import html, dash_table
 from data import CsvSchema
 
 class UploadParser:
-    def __init__(self, schema: CsvSchema):
-        self.schema = schema
+    def __init__(self, columns: Tuple[str, ...]):
+        self.columns = columns
 
     def parse_contents(self, contents: str, filename: str, last_modified: int):
         df = self._to_dataframe(contents, filename)
@@ -24,7 +25,7 @@ class UploadParser:
         raise ValueError("Unsupported file type. Please upload .csv or .xlsx")
 
     def _validate_schema(self, df: pd.DataFrame) -> None:
-        missing = [c for c in self.schema.columns if c not in df.columns]
+        missing = [c for c in self.columns if c not in df.columns]
         if missing:
             raise ValueError(f"Columns does not match the example.csv: {missing}")
 
