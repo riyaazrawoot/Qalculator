@@ -22,6 +22,14 @@ def manual_automation_comparison_graph(data_frame: pd.DataFrame):
     figure.update_traces(textposition="outside")
     figure.update_layout(xaxis_title="", yaxis_title="Number of test cases",
                          margin = dict(t=60))
+    total_tests = counts["Count"].sum()
+    figure.add_annotation(
+        x=0.5,
+        y=counts["Count"].max() * 1.1,
+        text=f"Total cases: {total_tests}",
+        showarrow=False,
+        xref="paper",
+    )
     return figure
 
 
@@ -104,15 +112,34 @@ def roi_over_time_graph(
         fig.add_annotation(
             x=break_even_release,
             y=break_even_cost,
-            text=f"Break-even: Release {break_even_release:.2f}",
+            text=f"Break-even: Release {break_even_release:.2f} (R{break_even_cost:,.2f})",
             showarrow=True,
             arrowhead=2,
+        )
+
+        final_manual = roi_df["manual_cost"].iloc[-1]
+        final_automation = roi_df["automation_cost"].iloc[-1]
+
+        fig.add_annotation(
+            x=releases,
+            y=final_manual,
+            text=f"Manual total: R{final_manual:,.2f}",
+            showarrow=False,
+            yanchor="bottom",
+        )
+        fig.add_annotation(
+            x=releases,
+            y=final_automation,
+            text=f"Automation total: R{final_automation:,.2f}",
+            showarrow=False,
+            yanchor="top",
         )
 
     fig.update_layout(
         title="ROI Over Time",
         xaxis_title="Release",
-        yaxis_title="Cumulative Cost",
+        yaxis_title="Cumulative Cost (Rands)",
+        yaxis_tickprefix="R",
         margin=dict(t=60),
     )
     return fig

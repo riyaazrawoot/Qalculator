@@ -35,17 +35,26 @@ class Layout:
 
             html.H5(["Upload your own data below."]),
 
-            dcc.Upload(
-                id="upload-data",
-                children=html.Button(html.A("Select Files")),
-                multiple=False,
-            ),
+            html.Div([
+                dcc.Upload(
+                    id="upload-data",
+                    children=html.Button("Select Data File"),
+                    multiple=False,
+                ),
+                dcc.Upload(
+                    id="upload-tester-data",
+                    children=html.Button("Select Tester File"),
+                    multiple=False,
+                ),
+            ], style={"display": "flex", "justifyContent": "center", "gap": "20px"}),
 
-            dcc.Upload(
-                id="upload-tester-data",
-                children=html.Button(html.A("Select Files")),
-                multiple=False,
-            ),
+            html.Div([
+                html.Label("Releases"),
+                dcc.Input(id="input-releases", type="number", value=12, min=1, style={"marginRight": "20px"}),
+                html.Label("Runs per Release"),
+                dcc.Input(id="input-runs", type="number", value=1, min=1),
+            ], style={"display": "flex", "justifyContent": "center", "alignItems": "center", "gap": "10px",
+                      "margin": "20px 0"}),
 
             # Store active data (uploaded or example)
             dcc.Store(id="active-df-store"),

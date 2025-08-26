@@ -92,11 +92,15 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
     @app.callback(
         Output("tab-content", "children"),
         Input("graph-tabs", "value"),
+        Input("input-runs", "value"),
+        Input("input-releases", "value"),
         State("active-df-store", "data"),
         State("active-tester-df-store", "data"),
         prevent_initial_call=True
     )
-    def render_graph(tab_value, records, tester_records):
+    def render_graph(tab_value, runs_per_release, releases, records, tester_records):
+        runs_per_release = runs_per_release or 1
+        releases = releases or 12
         data_frame = pd.DataFrame(records) if records else example_df
         tester_df = pd.DataFrame(tester_records) if tester_records else tester_example_df
 
@@ -119,8 +123,8 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
             figure = roi_over_time_graph(
                 data_frame,
                 tester_df,
-                runs_per_release=1,
-                releases=12,
+                runs_per_release=runs_per_release,
+                releases=releases,
                 releases_per_year=12.0,
             )
             description = (
