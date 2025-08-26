@@ -1,10 +1,7 @@
 import array
-from typing import Tuple
-
+from typing import Tuple, Dict
 import pandas as pd
-from pandas.core.interchange.dataframe_protocol import DataFrame
-
-from data import ExampleTesters
+import numpy as np
 
 def manual_automation_comparison(data_frame: pd.DataFrame):
     df = data_frame.copy()
@@ -35,9 +32,6 @@ def average_hourly_rate(testers_df):
         "automation_rate": avg_rate("automation")
     }
 
-rates = average_hourly_rate(ExampleTesters.tester_data_frame())
-print(rates)
-
 def execution_time_savings(data_frame: pd.DataFrame, runs_per_release = 1, releases = 12):
     df = data_frame.copy()
 
@@ -64,8 +58,8 @@ def make_roi_figure(releases: int, releases_per_year: float) -> float:
 
 def compute_cost_components(
     df: pd.DataFrame,
-    average_hourly_rate: array,
-    runs_per_release_global: int
+    average_hourly_rate: Dict[str, float],
+    runs_per_release_global: int,
 ) -> Tuple[float, float, float, float, int]:
     """
     Returns:
@@ -79,16 +73,13 @@ def compute_cost_components(
     total_manual_hours = df["manual_time_min"].fillna(0).sum() / 60.0
     manual_cost_per_run = total_manual_hours * average_hourly_rate['manual_rate']
 
-    runs_overrides = df["runs_per_release_override"].fillna("")
-    runs_per_release = []
-    for val in runs_overrides:
-        try:
-            rp = int(val)
-            rp = rp if rp > 0 else runs_per_release_global
-        except Exception:
-            rp = runs_per_release_global
-        runs_per_release.append(rp)
-    total_runs_this_release = max(1, sum(runs_per_release))
+    runs_overrides = pd.to_numeric(
+        df["runs_per_release_override"], errors="coerce"
+    ).fillna(runs_per_release_global)
+    runs_overrides = runs_overrides.where(
+        runs_overrides > 0, runs_per_release_global
+    )
+    total_runs_this_release = max(1, int(runs_overrides.sum()))
     manual_cost_per_release = manual_cost_per_run * total_runs_this_release
 
     # Candidates for automation
@@ -114,6 +105,50 @@ def compute_cost_components(
         total_runs_this_release,
     )
 
+def roi_over_time(
+    df: pd.DataFrame,
+    average_hourly_rate: Dict[str, float],
+    runs_per_release_global: int,
+    releases: int,
+    releases_per_year: float,
+):
+    """Compute cumulative manual and automation costs and ROI over a number of releases."""
+
+    (
+        manual_cost_per_release,
+        automation_initial_cost,
+        automation_run_cost_per_release,
+        maintenance_pct,
+        _,
+    ) = compute_cost_components(df, average_hourly_rate, runs_per_release_global)
+
+    months_per_release = 12.0 / max(releases_per_year, 1.0)
+    maintenance_cost_per_release = automation_initial_cost * maintenance_pct * months_per_release
+
+    releases_arr = np.arange(1, releases + 1)
+    manual_cumulative = releases_arr * manual_cost_per_release
+    automation_cumulative = (
+        automation_initial_cost
+        + releases_arr * (automation_run_cost_per_release + maintenance_cost_per_release)
+    )
+    roi = manual_cumulative - automation_cumulative
+
+    roi_df = pd.DataFrame(
+        {
+            "release": releases_arr,
+            "manual_cost": manual_cumulative,
+            "automation_cost": automation_cumulative,
+            "roi": roi,
+        }
+    )
+
+    break_even_idx = roi_df.index[roi_df["roi"] >= 0]
+    break_even_release = int(break_even_idx[0] + 1) if not break_even_idx.empty else None
+
+    return roi_df, break_even_release
+
+
+
 
 def manual_testing_cost(data_frame: pd.DataFrame, testers_df: pd.DataFrame, runs_per_release = 1, releases = 12):
     df = data_frame.copy()
@@ -136,14 +171,5 @@ def initial_development_cost(data_frame: pd.DataFrame, testers_df: pd.DataFrame)
     return data_frame["dev_time_hours"].fillna(0).sum() * average_automation_hourly_rate(testers_df)
 
 def average_maintenance_pct_per_month(data_frame: pd.DataFrame):
-    candidates = data_frame["candidate_for_automation"].astype(str).str.strip().str.lower().eq("no")
+    candidates = ~data_frame["candidate_for_automation"].astype(str).str.strip().str.lower().eq("no")
     return data_frame.loc[candidates, "maintenance_pct_per_month"].fillna(0).mean() / 100
-
-def months(releases, releases_per_year):
-    return (releases / releases_per_year) * 12
-
-def maintenance_hours_total(data_frame: pd.DataFrame,testers_df: pd.DataFrame, releases, releases_per_year):
-    return initial_development_cost(data_frame,testers_df) * average_maintenance_pct_per_month(data_frame) * months(releases, releases_per_year)
-
-def maintenance_cost_total(data_frame: pd.DataFrame,testers_df: pd.DataFrame, releases, release_per_year):
-    return maintenance_hours_total(data_frame, testers_df, releases, release_per_year) * average_automation_hourly_rate(testers_df)

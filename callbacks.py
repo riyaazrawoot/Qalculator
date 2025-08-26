@@ -1,8 +1,11 @@
 from dash import dcc, Input, Output, dash_table, html, State
 import pandas as pd
 
-from services.graph_registry import manual_automation_comparison, execution_savings_time_graph, \
-    manual_automation_comparison_graph
+from services.graph_registry import (
+    execution_savings_time_graph,
+    manual_automation_comparison_graph,
+    roi_over_time_graph,
+)
 from upload_parser import UploadParser
 
 
@@ -90,11 +93,12 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
         Output("tab-content", "children"),
         Input("graph-tabs", "value"),
         State("active-df-store", "data"),
+        State("active-tester-df-store", "data"),
         prevent_initial_call=True
     )
-    def render_graph(tab_value, records):
-
+    def render_graph(tab_value, records, tester_records):
         data_frame = pd.DataFrame(records) if records else example_df
+        tester_df = pd.DataFrame(tester_records) if tester_records else tester_example_df
 
         if tab_value in ("Manual vs Automation Testcases", "Cost", "COST"):
             figure = manual_automation_comparison_graph(data_frame)
@@ -102,7 +106,15 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
         elif tab_value == "Time":
             figure = execution_savings_time_graph(data_frame, runs_per_release=1, releases=12)
             return dcc.Graph(figure=figure)
-
+        elif tab_value == "ROI":
+            figure = roi_over_time_graph(
+                data_frame,
+                tester_df,
+                runs_per_release=1,
+                releases=12,
+                releases_per_year=12.0,
+            )
+            return dcc.Graph(figure=figure)
         return html.H3(f"You clicked the {tab_value} tab")
 
 

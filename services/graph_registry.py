@@ -1,8 +1,13 @@
 import pandas as pd
 import plotly
+import plotly.graph_objects as go
 
-from services.calculations import execution_time_savings, manual_automation_comparison
-
+from services.calculations import (
+    execution_time_savings,
+    manual_automation_comparison,
+    average_hourly_rate,
+    roi_over_time,
+)
 
 def manual_automation_comparison_graph(data_frame: pd.DataFrame):
 
@@ -54,5 +59,56 @@ def execution_savings_time_graph(data_frame: pd.DataFrame, runs_per_release: int
     )
 
     return fig
+
+
+def roi_over_time_graph(
+    data_frame: pd.DataFrame,
+    testers_df: pd.DataFrame,
+    runs_per_release: int = 1,
+    releases: int = 12,
+    releases_per_year: float = 12.0,
+):
+    rates = average_hourly_rate(testers_df)
+    roi_df, break_even_release = roi_over_time(
+        data_frame, rates, runs_per_release, releases, releases_per_year
+    )
+
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=roi_df["release"],
+            y=roi_df["manual_cost"],
+            mode="lines+markers",
+            name="Manual",
+        )
+    )
+    fig.add_trace(
+        go.Scatter(
+            x=roi_df["release"],
+            y=roi_df["automation_cost"],
+            mode="lines+markers",
+            name="Automation",
+        )
+    )
+
+    if break_even_release is not None:
+        be_cost = roi_df.loc[roi_df["release"] == break_even_release, "manual_cost"].iloc[0]
+        fig.add_vline(x=break_even_release, line_dash="dash", line_color="gray")
+        fig.add_annotation(
+            x=break_even_release,
+            y=be_cost,
+            text=f"Break-even: Release {break_even_release}",
+            showarrow=True,
+            arrowhead=2,
+        )
+
+    fig.update_layout(
+        title="ROI Over Time",
+        xaxis_title="Release",
+        yaxis_title="Cumulative Cost",
+        margin=dict(t=60),
+    )
+    return fig
+
 
 
