@@ -69,7 +69,7 @@ def roi_over_time_graph(
     releases_per_year: float = 12.0,
 ):
     rates = average_hourly_rate(testers_df)
-    roi_df, break_even_release = roi_over_time(
+    roi_df, break_even_release, break_even_cost = roi_over_time(
         data_frame, rates, runs_per_release, releases, releases_per_year
     )
 
@@ -91,13 +91,20 @@ def roi_over_time_graph(
         )
     )
 
-    if break_even_release is not None:
-        be_cost = roi_df.loc[roi_df["release"] == break_even_release, "manual_cost"].iloc[0]
-        fig.add_vline(x=break_even_release, line_dash="dash", line_color="gray")
+    if break_even_release is not None and break_even_cost is not None:
+        fig.add_trace(
+            go.Scatter(
+                x=[break_even_release],
+                y=[break_even_cost],
+                mode="markers",
+                marker=dict(symbol="x", size=12, color="red"),
+                name="Break-even",
+            )
+        )
         fig.add_annotation(
             x=break_even_release,
-            y=be_cost,
-            text=f"Break-even: Release {break_even_release}",
+            y=break_even_cost,
+            text=f"Break-even: Release {break_even_release:.2f}",
             showarrow=True,
             arrowhead=2,
         )

@@ -112,8 +112,6 @@ def roi_over_time(
     releases: int,
     releases_per_year: float,
 ):
-    """Compute cumulative manual and automation costs and ROI over a number of releases."""
-
     (
         manual_cost_per_release,
         automation_initial_cost,
@@ -123,7 +121,9 @@ def roi_over_time(
     ) = compute_cost_components(df, average_hourly_rate, runs_per_release_global)
 
     months_per_release = 12.0 / max(releases_per_year, 1.0)
-    maintenance_cost_per_release = automation_initial_cost * maintenance_pct * months_per_release
+    maintenance_cost_per_release = (
+            automation_initial_cost * maintenance_pct * months_per_release
+    )
 
     releases_arr = np.arange(1, releases + 1)
     manual_cumulative = releases_arr * manual_cost_per_release
@@ -142,10 +142,29 @@ def roi_over_time(
         }
     )
 
-    break_even_idx = roi_df.index[roi_df["roi"] >= 0]
-    break_even_release = int(break_even_idx[0] + 1) if not break_even_idx.empty else None
+    releases_ext = np.insert(releases_arr, 0, 0)
+    roi_ext = np.insert(roi, 0, -automation_initial_cost)
 
-    return roi_df, break_even_release
+    break_even_release = None
+    break_even_cost = None
+    for i in range(1, len(releases_ext)):
+        r_prev, r_curr = releases_ext[i - 1], releases_ext[i]
+        roi_prev, roi_curr = roi_ext[i - 1], roi_ext[i]
+
+        if roi_curr == 0:
+            break_even_release = float(r_curr)
+        elif roi_prev == 0:
+            break_even_release = float(r_prev)
+        elif roi_prev * roi_curr < 0:
+            # linear interpolation between r_prev and r_curr where roi crosses zero
+            ratio = -roi_prev / (roi_curr - roi_prev)
+            break_even_release = float(r_prev + (r_curr - r_prev) * ratio)
+
+        if break_even_release is not None:
+            break_even_cost = float(manual_cost_per_release * break_even_release)
+            break
+
+    return roi_df, break_even_release, break_even_cost
 
 
 

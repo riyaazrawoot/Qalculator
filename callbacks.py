@@ -103,15 +103,16 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
         if tab_value in ("Manual vs Automation Testcases", "Cost", "COST"):
             figure = manual_automation_comparison_graph(data_frame)
             description = (
-                "Displays the number of test cases that are good candidates for automation"
-                " versus those that remain manual."
+                "Counts test cases tagged for automation against those kept manual,"
+                " helping estimate how much of the suite could be automated."
             )
             return html.Div([dcc.Graph(figure=figure), html.P(description)])
         elif tab_value == "Time":
             figure = execution_savings_time_graph(data_frame, runs_per_release=1, releases=12)
             description = (
-                "Compares total execution hours for manual and automated runs,"
-                " highlighting time saved through automation."
+                "Totals manual hours (manual_time_min/60 * runs * releases) versus"
+                " automated hours (exec_time_sec/3600 * runs * releases) to show"
+                " the execution time saved by automation."
             )
             return html.Div([dcc.Graph(figure=figure), html.P(description)])
         elif tab_value == "ROI":
@@ -123,8 +124,9 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
                 releases_per_year=12.0,
             )
             description = (
-                "Shows cumulative manual testing and automation costs per release and"
-                " marks the release where automation breaks even."
+                "Plots cumulative manual cost (manual hours * manual rate) against automation"
+                " cost (development + execution + maintenance) and marks the release"
+                " where automation becomes cheaper."
             )
             return html.Div([dcc.Graph(figure=figure), html.P(description)])
         return html.H3(f"You clicked the {tab_value} tab")
