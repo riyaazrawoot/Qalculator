@@ -18,7 +18,6 @@ It takes a simple dataset of your test cases (or uses the included sample data) 
 
 ## 🖼️ Screenshots / Demo  
 
-👉 *Add your own screenshots here:*  
 - ![img.png](img.png)
 - ![roi.png](roi.png)
 - ![timesavings.png](timesavings.png)
