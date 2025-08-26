@@ -17,21 +17,14 @@ class Layout:
                      html.Br(),
                      "This lets you explore the calculations and graphs right away, but with example numbers rather than your own."]),
 
-            html.Div(
-                [
-                    html.Button("Download Example CSV", id="btn_csv"),
-                    dcc.Download(id="download-dataframe-csv"),
-                ],
-                id="btn_div"
-            ),
+            html.Div([
+                html.Button("Download Example CSV", id="btn_csv"),
+                dcc.Download(id="download-dataframe-csv"),
 
-            html.Div(
-                [
-                    html.Button("Download Example Tester Details CSV", id="btn_tester_csv"),
-                    dcc.Download(id="download-tester-dataframe-csv"),
-                ],
-                id="btn_tester_div"
-            ),
+                html.Button("Download Example Tester Details CSV", id="btn_tester_csv"),
+                dcc.Download(id="download-tester-dataframe-csv"),
+
+            ], style={"display": "flex", "justifyContent": "center", "gap": "20px"}),
 
             html.H5(["Upload your own data below."]),
 
