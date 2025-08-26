@@ -102,10 +102,18 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
 
         if tab_value in ("Manual vs Automation Testcases", "Cost", "COST"):
             figure = manual_automation_comparison_graph(data_frame)
-            return dcc.Graph(figure=figure)
+            description = (
+                "Displays the number of test cases that are good candidates for automation"
+                " versus those that remain manual."
+            )
+            return html.Div([dcc.Graph(figure=figure), html.P(description)])
         elif tab_value == "Time":
             figure = execution_savings_time_graph(data_frame, runs_per_release=1, releases=12)
-            return dcc.Graph(figure=figure)
+            description = (
+                "Compares total execution hours for manual and automated runs,"
+                " highlighting time saved through automation."
+            )
+            return html.Div([dcc.Graph(figure=figure), html.P(description)])
         elif tab_value == "ROI":
             figure = roi_over_time_graph(
                 data_frame,
@@ -114,7 +122,11 @@ def register_callbacks(app, example_df: pd.DataFrame, tester_example_df: pd.Data
                 releases=12,
                 releases_per_year=12.0,
             )
-            return dcc.Graph(figure=figure)
+            description = (
+                "Shows cumulative manual testing and automation costs per release and"
+                " marks the release where automation breaks even."
+            )
+            return html.Div([dcc.Graph(figure=figure), html.P(description)])
         return html.H3(f"You clicked the {tab_value} tab")
 
 
